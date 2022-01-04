@@ -1,0 +1,47 @@
+package hello.hellospring.repository;
+
+import hello.hellospring.domain.Member;
+
+import javax.persistence.EntityManager;
+import java.util.List;
+import java.util.Optional;
+
+public class JpaMemberRepository implements MemberRepository{
+
+    // jpa 라이브러리 설치하면 자동으로 EntityManager를 스프링 빈에 등록되어 있으므로
+    // 주입받을 수 있음.
+    private final EntityManager em;
+
+    public JpaMemberRepository(EntityManager em) {
+        this.em = em;
+    }
+
+    @Override
+    public Member save(Member member) {
+        em.persist(member);
+        return member;
+    }
+
+    @Override
+    public Optional<Member> findById(Long id) {
+        Member member = em.find(Member.class, id);
+        return Optional.ofNullable(member);
+    }
+
+    // pk가 아니면 jpql언어를 사용해야함
+    @Override
+    public Optional<Member> findByName(String name) {
+        List<Member> result = em.createQuery("select m from Member m where m.name = :name", Member.class)
+                .setParameter("name", name)
+                .getResultList();
+
+        return result.stream().findAny();
+    }
+
+    @Override
+    public List<Member> findAll() {
+        return em.createQuery("select m from Member m", Member.class).getResultList();
+        // jpql 이라는 언어 - 테이블이 아닌 객체(엔티티)를 대한으로 쿼리를 날림
+        // 객체 자체(m)를 조회
+    }
+}
